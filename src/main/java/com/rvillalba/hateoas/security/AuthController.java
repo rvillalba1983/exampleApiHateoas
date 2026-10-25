@@ -54,11 +54,18 @@ public class AuthController {
         return tokenService.issue(userDetailsService.loadUserByUsername(username));
     }
 
-    /** Datos del usuario del token. */
+    /**
+     * Datos del usuario del token. Solo se devuelven los roles: Spring Security 7 añade además
+     * authorities de "factor" (p. ej. FACTOR_BEARER) que indican cómo se autenticó el usuario.
+     */
     @GetMapping("/me")
     public UserInfo me(JwtAuthenticationToken authentication) {
         return new UserInfo(authentication.getName(),
-                authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).sorted().toList());
+                authentication.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .filter(authority -> authority.startsWith("ROLE_"))
+                        .sorted()
+                        .toList());
     }
 
     @ExceptionHandler({AuthenticationException.class, JwtException.class, UsernameNotFoundException.class})
